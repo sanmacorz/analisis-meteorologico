@@ -63,7 +63,7 @@ while True:
     current_city = list_of_locations[0]
     lat = float(round(current_city.lat,4))
     lon = float(round(current_city.lon,4))
-    peticion = requests.get('https://api.openweathermap.org/data/2.5/onecall?lat=' + str(lat) + '&lon=' + str(lon) + '&appid=02c0f6509fb3aaffa44ebcdba2c9d2ea')
+    peticion = requests.get('https://api.openweathermap.org/data/2.5/onecall?lat=' + str(lat) + '&lon=' + str(lon) + "&appid=" + api_key)
     zona_horaria = str(peticion.json()['timezone'])
     one_call = weather_mgr.one_call(lat=current_city.lat, lon=current_city.lon)
     weather = observation.weather
