@@ -1,8 +1,9 @@
+import os
+
 def cargar_llave(ruta):
     """
     Carga la llave de la API almacenada en el directorio actual
     """
-    import os
     directorio = os.path.join(os.path.dirname(os.path.abspath(__file__)), ruta)
     archivo = open(directorio, "r")
     llave = str(archivo.read().splitlines()[0])

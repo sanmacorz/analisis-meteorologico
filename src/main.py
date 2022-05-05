@@ -10,18 +10,13 @@ import pytz
 
 # Despues se despliega una pequeña interfaz
 while True:
-    print("----------------------------------------------")
-    print("-----  Análisis Metereológico \U0001F327 --------------")
+    print("\n----------------------------------------------")
+    print("--------  Análisis Metereológico \U0001F327 -----------")
     print("----------------------------------------------")
 
-    titulo = "Bienvenido a nuestro proyecto!!!\n"
+    titulo = "\nBienvenido a nuestro proyecto!!!\n"
     print(titulo)
-
-    # A continuación pedimos la información necesaria para que el programa pueda funcionar 
-
-    ciudad = str(input("Ingrese la ciudad a la que desea consultar: "))
-    pais = str(input("Por favor, utilice la convención ISO 3166 (https://www.iso.org/obp/ui/es/#search)\nIngrese el país a el que desea consultar: "))
-
+     
     # Seguido de esto se solicita la opción que requiera el usuario
 
     print("¿Que desea buscar?\n")
@@ -29,17 +24,29 @@ while True:
     print("2. Zona horaria")
     print("3. Velocidad del viento")
     print("4. Humedad actual")
-    print("5 Temperatura actual")
+    print("5. Temperatura actual")
     print("6. Estado del clima")
     print("7. Lluvia actual")
     print("8. Nubosidad actual")
     print("9. Luz ultra violeta")
     print("10. Calidad del aire")
-    print("11. Mapa indice de calor")
-    print("12. Predicción del clima")
-    print("13. Estadisticas completas")
-    print("15. Salir del programa")
+    print("11. Estadisticas completas")
+    print("12. Salir del programa")
+    # 13. Mapa del indice de calor 
+    # 14. Prediccion del clima
+    # 15. Fertilidad del suelo
+    # 16. Historial del clima 
     opcion = int(input("Digite el número de su opción: "))
+
+    if opcion == 12:
+        print("Saliendo del programa ...")
+        break
+
+
+    # A continuación pedimos la información necesaria para que el programa pueda funcionar
+
+    ciudad = str(input("Ingrese la ciudad a la que desea consultar: "))
+    pais = str(input("Por favor, utilice la convención ISO 3166 (https://www.iso.org/obp/ui/es/#search)\nIngrese el país a el que desea consultar: "))
 
     # Según los datos obtenidos de los anteriores puntos, se procesa la información y se extrae la información de la base de datos
 
@@ -78,39 +85,39 @@ while True:
     # Al final, con los datos ya obtenidos de la base de datos, se imprime los resultados según la información que requiera el usuario
 
     if opcion == 1:
-        print("\n---Coordenadas---\U0001F5FA\n")
-        print("Las coordenadas son: " + str(lat) + " latitud, " + str(lon) + " longuitud.")
+        print("\n---Coordenadas \U0001F5FA---\n")
+        print("Las coordenadas de " + ciudad + " son " + str(lat) + " latitud, " + str(lon) + " longuitud.")
 
     elif opcion == 2:
-        print("\n---Zona Horaria---\U0000231B\n")
-        print("La zona horaria es: " + str(zona_horaria))
+        print("\n---Zona Horaria \U0000231B---\n")
+        print("La zona horaria de " + ciudad + " es " + str(zona_horaria.strftime("%X")))
 
     elif opcion == 3:
-        print("\n---Velocidad del viento---\U0001F32C\n")
+        print("\n---Velocidad del viento \U0001F32C---\n")
         print("La velocidad del viento actual es de " + str(viento) + "m/s " + str(velocidad_viento))
 
     elif opcion == 4:
-        print("\n---Humedad---\U0001F4A7\n")
+        print("\n---Humedad \U0001F4A7---\n")
         print("La humedad actual es del " + str(humedad) + "%")
 
     elif opcion == 5:
-        print("\n---Temperatura---\U0001F321\n")
+        print("\n---Temperatura \U0001F321---\n")
         print("La temperatura actual es de " + str(temperatura) + "°C")
 
     elif opcion == 6:
-        print("\n---Estado del clima---\U0001F32C\n")
+        print("\n---Estado del clima \U0001F32C---\n")
         print("El estado del clima actual es de " + str(clima))
 
     elif opcion == 7:
-        print("\n---Lluvia---\U0001F327\n")
+        print("\n---Lluvia \U0001F327---\n")
         print("La lluvia actual es de " + str(lluvia) + "mm")
 
     elif opcion == 8:
-        print("\n---Nubosidad---\U000026C5\n")
+        print("\n---Nubosidad \U000026C5---\n")
         print("La nubosidad actual es del " + str(nubes) + "%")
 
     elif opcion == 9:
-        print("\n---Luz Ultra Violeta---\U00002600\n")
+        print("\n---Luz Ultra Violeta \U00002600---\n")
         print("El índice de luz UV es de: " + str(uvi.value))
 
     elif opcion == 10:
@@ -124,8 +131,8 @@ while True:
         print("El nivel de PM25 es de: " + str(calidad_aire.pm2_5) + " μg/m3")
         print("El nivel de PM10 es de: " + str(calidad_aire.pm10) + " μg/m3")
 
-    elif opcion == 13:
-        print("Se utilizarán las coordenadas: " + str(lat) + ", " + str(lon) + " a las: " + str(zona_horaria))
+    elif opcion == 11:
+        print("\nSe utilizarán las coordenadas de " + ciudad + " y estas son " + str(lat) + ", " + str(lon) + " a las " + str(zona_horaria.strftime("%X")))
         print("\n---Estadisticas climaticas---\n")
         print("La velocidad del viento actual es de " + str(viento) + "m/s " + str(velocidad_viento))
         print("La humedad actual es del " + str(humedad) + "%")
@@ -144,8 +151,7 @@ while True:
         print("El nivel de PM10 es de: " + str(calidad_aire.pm10) + " μg/m3")
         print("\n---Estadisticas de la luz ultravioleta---\n")
         print("El índice de luz UV es de: " + str(uvi.value))
-    elif opcion == 15:
-        print("Saliendo del programa ...")
-        break
     else:
         print("Opción desconocida. \U0001F937")
+        break
+    
