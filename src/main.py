@@ -1,157 +1,348 @@
-#!/usr/bin/env python3
-
-# Primero se importan todas las funciones, requerimientos y demas para que el programa pueda funcionar
-
+import tkinter as tk
+import tkinter.ttk
 from pyowm import OWM
-import functions
-import requests
-from datetime import datetime
-import pytz
+from pyowm.utils.geo import Point
+from pyowm.commons.tile import Tile
+from pyowm.tiles.enums import MapLayerEnum
+import funciones
 
-# Despues se despliega una pequeña interfaz
-while True:
-    print("\n----------------------------------------------")
-    print("--------  Análisis Metereológico \U0001F327 -----------")
-    print("----------------------------------------------")
+# #4DBFD9 - Segundo plano
+# #FAFAFA - Primer plano
+# #4D4D4D - Barra
+# #1A1A1A - Texto
+# #FEE573 - Imagenes
 
-    titulo = "\nBienvenido a nuestro proyecto!!!\n"
-    print(titulo)
-     
-    # Seguido de esto se solicita la opción que requiera el usuario
+raiz = tk.Tk()
+raiz.geometry("1920x1080")
+raiz.configure(bg="#4DBFD9")
 
-    print("¿Que desea buscar?\n")
-    print("1. Coordenadas de la ubicación")
-    print("2. Zona horaria")
-    print("3. Velocidad del viento")
-    print("4. Humedad actual")
-    print("5. Temperatura actual")
-    print("6. Estado del clima")
-    print("7. Lluvia actual")
-    print("8. Nubosidad actual")
-    print("9. Luz ultra violeta")
-    print("10. Calidad del aire")
-    print("11. Estadisticas completas")
-    print("12. Salir del programa")
-    # 13. Mapa del indice de calor 
-    # 14. Prediccion del clima
-    # 15. Fertilidad del suelo
-    # 16. Historial del clima 
-    opcion = int(input("Digite el número de su opción: "))
+seleccion = tk.IntVar()
+seleccion.set(1)
 
-    if opcion == 12:
-        print("Saliendo del programa ...")
-        break
+canvas_principal = tk.Canvas(
+    raiz,
+    width="1280",
+    height="720",
+    highlightthickness=5,
+    highlightbackground="#4D4D4D",
+)
+canvas_principal.configure(bg="#FAFAFA")
+canvas_principal.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+
+titulo_proyecto = tk.Label(canvas_principal, text="Análisis meterológico")
+titulo_proyecto.config(bg="#FAFAFA", font=("Arial", 14))
+titulo_proyecto.grid(row=0, column=1, padx=15, pady=15)
+
+bienvenido_proyecto = tk.Label(canvas_principal, text="Bienvenido a nuestro proyecto!")
+bienvenido_proyecto.config(bg="#FAFAFA", font=("Arial", 14))
+bienvenido_proyecto.grid(row=1, column=1)
+
+opciones = [
+    ("Coordenadas de la ubicación", 1),
+    ("Velocidad del viento", 2),
+    ("Humedad actual", 3),
+    ("Temperatura actual", 4),
+    ("Estado del clima", 5),
+    ("Lluvia actual", 6),
+    ("Nubosidad actual", 7),
+    ("Luz ultra violeta", 8),
+    ("Calidad del aire", 9),
+    ("Estadisticas completas", 10),
+    ("Mapa del índice de precipitación", 11),
+    ("Mapa del índice de temperatura", 12),
+]
+
+canvas_principal.create_window(
+    400,
+    200,
+    window=tk.Label(canvas_principal, text="Qué desea consultar?").grid(
+        row=2, column=0
+    ),
+)
+canvas_principal.create_window(
+    400,
+    200,
+    window=tkinter.ttk.Separator(canvas_principal, orient="vertical").grid(
+        column=1, row=2, rowspan="19", sticky="ns"
+    ),
+)
+canvas_principal.create_window(
+    400,
+    200,
+    window=tk.Label(
+        canvas_principal, text="Ingrese la ciudad a la que desea consultar: "
+    ).grid(row=2, column=2),
+)
+campo_texto = tk.Entry(canvas_principal)
+canvas_principal.create_window(400, 200, window=campo_texto.grid(row=2, column=3))
+global texto
+texto = tk.Label(canvas_principal)
 
 
-    # A continuación pedimos la información necesaria para que el programa pueda funcionar
-
-    ciudad = str(input("Ingrese la ciudad a la que desea consultar: "))
-    pais = str(input("Por favor, utilice la convención ISO 3166 (https://www.iso.org/obp/ui/es/#search)\nIngrese el país a el que desea consultar: "))
-
-    # Según los datos obtenidos de los anteriores puntos, se procesa la información y se extrae la información de la base de datos
-
-    api_key = str(functions.cargar_llave("api.key"))
-    owm = OWM(api_key)
+def obtenerDatos():
+    global ciudad
+    ciudad = campo_texto.get()
+    llave_api = str(funciones.cargar_llave("api.key"))
+    owm = OWM(llave_api)
     config_dict = owm.configuration
-    config_dict['language'] = 'es'
-    reg = owm.city_id_registry()
-    list_of_locations = reg.locations_for(ciudad, country=pais, matching='like')
-    weather_mgr = owm.weather_manager()
-    pollution_mgr = owm.airpollution_manager()
-    uvi_mgr = owm.uvindex_manager()
-    observation = weather_mgr.weather_at_place(ciudad + ", " + pais)
-    current_city = list_of_locations[0]
-    lat = float(round(current_city.lat,4))
-    lon = float(round(current_city.lon,4))
-    peticion = requests.get('https://api.openweathermap.org/data/2.5/onecall?lat=' + str(lat) + '&lon=' + str(lon) + "&appid=" + api_key)
-    zona_horaria = str(peticion.json()['timezone'])
-    one_call = weather_mgr.one_call(lat=current_city.lat, lon=current_city.lon)
-    weather = observation.weather
-    zona_horaria = pytz.timezone(zona_horaria)
-    zona_horaria = datetime.now(zona_horaria)
-    temperatura = int(round(float(list(one_call.current.temperature('celsius').values())[0]),0))
-    viento = one_call.current.wind().get('speed', 0)
-    velocidad_viento = functions.convertir_direccion(weather.wind().get('deg', 0))
-    humedad = one_call.current.humidity
-    clima = weather.detailed_status
-    nubes = weather.clouds
-    calidad_aire = pollution_mgr.air_quality_at_coords(lat, lon)
-    uvi = uvi_mgr.uvindex_around_coords(lat, lon)
+    config_dict["language"] = "es"
+    registro = owm.city_id_registry()
+    pais = "CO"
+    lista_ubicaciones = registro.locations_for(ciudad, country=pais, matching="like")
+    adm_clima = owm.weather_manager()
+    adm_contaminacion = owm.airpollution_manager()
+    adm_iuv = owm.uvindex_manager()
+    observacion = adm_clima.weather_at_place(ciudad + ", " + pais)
+    ciudad_actual = lista_ubicaciones[0]
+    global latitud
+    latitud = float(round(ciudad_actual.lat, 4))
+    global longitud
+    longitud = float(round(ciudad_actual.lon, 4))
+    llamada = adm_clima.one_call(lat=latitud, lon=longitud)
+    clima = observacion.weather
+    global temperatura
+    temperatura = int(
+        round(float(list(llamada.current.temperature("celsius").values())[0]), 0)
+    )
+    global velocidad_viento
+    velocidad_viento = llamada.current.wind().get("speed", 0)
+    global direccion_viento
+    direccion_viento = funciones.convertir_direccion(clima.wind().get("deg", 0))
+    global humedad
+    humedad = llamada.current.humidity
+    global clima_general
+    clima_general = clima.detailed_status
+    global nubes
+    nubes = clima.clouds
+    global calidad_aire
+    calidad_aire = adm_contaminacion.air_quality_at_coords(latitud, longitud)
+    global iuv
+    iuv = adm_iuv.uvindex_around_coords(latitud, longitud)
+    global lluvia
     try:
-        lluvia = list(weather.rain.values())[0]
+        lluvia = list(clima.rain.values())[0]
     except IndexError as error:
         lluvia = 0
+    punto_geologico = Point(longitud, latitud)
+    zoom_precipitacion = 7  # Radio de 250 km
+    zoom_temperatura = 8  # Radio de 100 km
+    x_tile, y_tile = Tile.tile_coords_for_point(punto_geologico, zoom_precipitacion)
+    tm_prec = owm.tile_manager(MapLayerEnum.PRECIPITATION)
+    cuadricula = tm_prec.get_tile(x_tile, y_tile, zoom_precipitacion)
+    global numero_archivo_prec
+    numero_archivo_prec = funciones.archivo_repetido("media/")
+    cuadricula.persist("media/" + numero_archivo_prec)
+    x_tile, y_tile = Tile.tile_coords_for_point(punto_geologico, zoom_temperatura)
+    tm_temp = owm.tile_manager(MapLayerEnum.TEMPERATURE)
+    cuadricula = tm_temp.get_tile(x_tile, y_tile, zoom_temperatura)
+    global numero_archivo_temp
+    numero_archivo_temp = funciones.archivo_repetido("media/")
+    cuadricula.persist("media/" + numero_archivo_temp)
 
-    # Al final, con los datos ya obtenidos de la base de datos, se imprime los resultados según la información que requiera el usuario
 
+def mostrarDatos():
+    global texto
+    opcion = seleccion.get()
     if opcion == 1:
-        print("\n---Coordenadas \U0001F5FA---\n")
-        print("Las coordenadas de " + ciudad + " son " + str(lat) + " latitud, " + str(lon) + " longuitud.")
-
+        resultado = (
+            "Las coordenadas de "
+            + ciudad
+            + " son "
+            + str(latitud)
+            + " latitud, "
+            + str(longitud)
+            + " longuitud."
+        )
+        texto.destroy()
+        texto = tk.Label(canvas_principal, text=resultado)
+        texto.config(bg="#FAFAFA", font=("Arial", 14))
+        canvas_principal.create_window(400, 200, window=texto.grid(row=3, column=2))
     elif opcion == 2:
-        print("\n---Zona Horaria \U0000231B---\n")
-        print("La zona horaria de " + ciudad + " es " + str(zona_horaria.strftime("%X")))
-
+        resultado = (
+            "La velocidad del viento actual es de "
+            + str(velocidad_viento)
+            + "m/s "
+            + str(direccion_viento)
+        )
+        texto.destroy()
+        texto = tk.Label(canvas_principal, text=resultado)
+        canvas_principal.create_window(400, 200, window=texto.grid(row=3, column=2))
     elif opcion == 3:
-        print("\n---Velocidad del viento \U0001F32C---\n")
-        print("La velocidad del viento actual es de " + str(viento) + "m/s " + str(velocidad_viento))
-
+        resultado = "La humedad actual es del " + str(humedad) + "%"
+        texto.destroy()
+        texto = tk.Label(canvas_principal, text=resultado)
+        canvas_principal.create_window(400, 200, window=texto.grid(row=3, column=2))
     elif opcion == 4:
-        print("\n---Humedad \U0001F4A7---\n")
-        print("La humedad actual es del " + str(humedad) + "%")
-
+        resultado = "La temperatura actual es de " + str(temperatura) + "°C"
+        texto.destroy()
+        texto = tk.Label(canvas_principal, text=resultado)
+        canvas_principal.create_window(400, 200, window=texto.grid(row=3, column=2))
     elif opcion == 5:
-        print("\n---Temperatura \U0001F321---\n")
-        print("La temperatura actual es de " + str(temperatura) + "°C")
-
+        resultado = "El estado del clima actual es " + str(clima_general)
+        texto.destroy()
+        texto = tk.Label(canvas_principal, text=resultado)
+        canvas_principal.create_window(400, 200, window=texto.grid(row=3, column=2))
     elif opcion == 6:
-        print("\n---Estado del clima \U0001F32C---\n")
-        print("El estado del clima actual es de " + str(clima))
-
+        resultado = "La lluvia actual es de " + str(lluvia) + "mm"
+        texto.destroy()
+        texto = tk.Label(canvas_principal, text=resultado)
+        canvas_principal.create_window(400, 200, window=texto.grid(row=3, column=2))
     elif opcion == 7:
-        print("\n---Lluvia \U0001F327---\n")
-        print("La lluvia actual es de " + str(lluvia) + "mm")
-
+        resultado = "La nubosidad actual es del " + str(nubes) + "%"
+        texto.destroy()
+        texto = tk.Label(canvas_principal, text=resultado)
+        canvas_principal.create_window(400, 200, window=texto.grid(row=3, column=2))
     elif opcion == 8:
-        print("\n---Nubosidad \U000026C5---\n")
-        print("La nubosidad actual es del " + str(nubes) + "%")
-
+        resultado = "El índice de luz UV es de: " + str(iuv.value)
+        texto.destroy()
+        texto = tk.Label(canvas_principal, text=resultado)
+        canvas_principal.create_window(400, 200, window=texto.grid(row=3, column=2))
     elif opcion == 9:
-        print("\n---Luz Ultra Violeta \U00002600---\n")
-        print("El índice de luz UV es de: " + str(uvi.value))
-
+        resultado = "El nivel de CO es de: " + str(calidad_aire.co) + " μg/m3"
+        texto.destroy()
+        texto = tk.Label(canvas_principal, text=resultado)
+        canvas_principal.create_window(400, 200, window=texto.grid(row=3, column=2))
+        resultado = "El nivel de NO es de: " + str(calidad_aire.no) + " μg/m3"
+        texto.destroy()
+        texto = tk.Label(canvas_principal, text=resultado)
+        canvas_principal.create_window(400, 200, window=texto.grid(row=4, column=2))
+        resultado = "El nivel de NO2 es de: " + str(calidad_aire.no2) + " μg/m3"
+        texto.destroy()
+        texto = tk.Label(canvas_principal, text=resultado)
+        canvas_principal.create_window(400, 200, window=texto.grid(row=5, column=2))
+        resultado = "El nivel de O3 es de: " + str(calidad_aire.o3) + " μg/m3"
+        texto.destroy()
+        texto = tk.Label(canvas_principal, text=resultado)
+        canvas_principal.create_window(400, 200, window=texto.grid(row=6, column=2))
+        resultado = "El nivel de SO2 es de: " + str(calidad_aire.so2) + " μg/m3"
+        texto.destroy()
+        texto = tk.Label(canvas_principal, text=resultado)
+        canvas_principal.create_window(400, 200, window=texto.grid(row=7, column=2))
+        resultado = "El nivel de NH3 es de: " + str(calidad_aire.nh3) + " μg/m3"
+        texto.destroy()
+        texto = tk.Label(canvas_principal, text=resultado)
+        canvas_principal.create_window(400, 200, window=texto.grid(row=8, column=2))
+        resultado = "El nivel de PM25 es de: " + str(calidad_aire.pm2_5) + " μg/m3"
+        texto.destroy()
+        texto = tk.Label(canvas_principal, text=resultado)
+        canvas_principal.create_window(400, 200, window=texto.grid(row=9, column=2))
+        resultado = "El nivel de PM10 es de: " + str(calidad_aire.pm10) + " μg/m3"
+        texto.destroy()
+        texto = tk.Label(canvas_principal, text=resultado)
+        canvas_principal.create_window(400, 200, window=texto.grid(row=10, column=2))
     elif opcion == 10:
-        print("\n---Estadisticas de calidad del aire---\n")
-        print("El nivel de CO es de: " + str(calidad_aire.co) + " μg/m3")
-        print("El nivel de NO es de: " + str(calidad_aire.no) + " μg/m3")
-        print("El nivel de NO2 es de: " + str(calidad_aire.no2) + " μg/m3")
-        print("El nivel de O3 es de: " + str(calidad_aire.o3) + " μg/m3")
-        print("El nivel de SO2 es de: " + str(calidad_aire.so2) + " μg/m3")
-        print("El nivel de NH3 es de: " + str(calidad_aire.nh3) + " μg/m3")
-        print("El nivel de PM25 es de: " + str(calidad_aire.pm2_5) + " μg/m3")
-        print("El nivel de PM10 es de: " + str(calidad_aire.pm10) + " μg/m3")
-
+        resultado = (
+            "La velocidad del viento actual es de "
+            + str(velocidad_viento)
+            + "m/s "
+            + str(direccion_viento)
+        )
+        texto.destroy()
+        texto = tk.Label(canvas_principal, text=resultado)
+        canvas_principal.create_window(400, 200, window=texto.grid(row=3, column=2))
+        resultado = "La humedad actual es del " + str(humedad) + "%"
+        texto.destroy()
+        texto = tk.Label(canvas_principal, text=resultado)
+        canvas_principal.create_window(400, 200, window=texto.grid(row=4, column=2))
+        resultado = "La temperatura actual es de " + str(temperatura) + "°C"
+        texto.destroy()
+        texto = tk.Label(canvas_principal, text=resultado)
+        canvas_principal.create_window(400, 200, window=texto.grid(row=5, column=2))
+        resultado = "El estado del clima actual es de " + str(clima_general)
+        texto.destroy()
+        texto = tk.Label(canvas_principal, text=resultado)
+        canvas_principal.create_window(400, 200, window=texto.grid(row=6, column=2))
+        resultado = "La lluvia actual es de " + str(lluvia) + "mm"
+        texto.destroy()
+        texto = tk.Label(canvas_principal, text=resultado)
+        canvas_principal.create_window(400, 200, window=texto.grid(row=7, column=2))
+        resultado = "La nubosidad actual es del " + str(nubes) + "%"
+        texto.destroy()
+        texto = tk.Label(canvas_principal, text=resultado)
+        canvas_principal.create_window(400, 200, window=texto.grid(row=8, column=2))
+        resultado = "El nivel de CO es de: " + str(calidad_aire.co) + " μg/m3"
+        texto.destroy()
+        texto = tk.Label(canvas_principal, text=resultado)
+        canvas_principal.create_window(400, 200, window=texto.grid(row=9, column=2))
+        resultado = "El nivel de NO es de: " + str(calidad_aire.no) + " μg/m3"
+        texto.destroy()
+        texto = tk.Label(canvas_principal, text=resultado)
+        canvas_principal.create_window(400, 200, window=texto.grid(row=10, column=2))
+        resultado = "El nivel de NO2 es de: " + str(calidad_aire.no2) + " μg/m3"
+        texto.destroy()
+        texto = tk.Label(canvas_principal, text=resultado)
+        canvas_principal.create_window(400, 200, window=texto.grid(row=11, column=2))
+        resultado = "El nivel de O3 es de: " + str(calidad_aire.o3) + " μg/m3"
+        texto.destroy()
+        texto = tk.Label(canvas_principal, text=resultado)
+        canvas_principal.create_window(400, 200, window=texto.grid(row=12, column=2))
+        resultado = "El nivel de SO2 es de: " + str(calidad_aire.so2) + " μg/m3"
+        texto.destroy()
+        texto = tk.Label(canvas_principal, text=resultado)
+        canvas_principal.create_window(400, 200, window=texto.grid(row=13, column=2))
+        resultado = "El nivel de NH3 es de: " + str(calidad_aire.nh3) + " μg/m3"
+        texto.destroy()
+        texto = tk.Label(canvas_principal, text=resultado)
+        canvas_principal.create_window(400, 200, window=texto.grid(row=14, column=2))
+        resultado = "El nivel de PM25 es de: " + str(calidad_aire.pm2_5) + " μg/m3"
+        texto.destroy()
+        texto = tk.Label(canvas_principal, text=resultado)
+        canvas_principal.create_window(400, 200, window=texto.grid(row=15, column=2))
+        resultado = "El nivel de PM10 es de: " + str(calidad_aire.pm10) + " μg/m3"
+        texto.destroy()
+        texto = tk.Label(canvas_principal, text=resultado)
+        canvas_principal.create_window(400, 200, window=texto.grid(row=16, column=2))
+        resultado = "El índice de luz UV es de: " + str(iuv.value)
+        texto.destroy()
+        texto = tk.Label(canvas_principal, text=resultado)
+        canvas_principal.create_window(400, 200, window=texto.grid(row=17, column=2))
     elif opcion == 11:
-        print("\nSe utilizarán las coordenadas de " + ciudad + " y estas son " + str(lat) + ", " + str(lon) + " a las " + str(zona_horaria.strftime("%X")))
-        print("\n---Estadisticas climaticas---\n")
-        print("La velocidad del viento actual es de " + str(viento) + "m/s " + str(velocidad_viento))
-        print("La humedad actual es del " + str(humedad) + "%")
-        print("La temperatura actual es de " + str(temperatura) + "°C")
-        print("El estado del clima actual es de " + str(clima))
-        print("La lluvia actual es de " + str(lluvia) + "mm")
-        print("La nubosidad actual es del " + str(nubes) + "%")
-        print("\n---Estadisticas de calidad del aire---\n")
-        print("El nivel de CO es de: " + str(calidad_aire.co) + " μg/m3")
-        print("El nivel de NO es de: " + str(calidad_aire.no) + " μg/m3")
-        print("El nivel de NO2 es de: " + str(calidad_aire.no2) + " μg/m3")
-        print("El nivel de O3 es de: " + str(calidad_aire.o3) + " μg/m3")
-        print("El nivel de SO2 es de: " + str(calidad_aire.so2) + " μg/m3")
-        print("El nivel de NH3 es de: " + str(calidad_aire.nh3) + " μg/m3")
-        print("El nivel de PM25 es de: " + str(calidad_aire.pm2_5) + " μg/m3")
-        print("El nivel de PM10 es de: " + str(calidad_aire.pm10) + " μg/m3")
-        print("\n---Estadisticas de la luz ultravioleta---\n")
-        print("El índice de luz UV es de: " + str(uvi.value))
+        archivo = "media/" + numero_archivo_prec
+        imagen = tk.PhotoImage(file=archivo)
+        canvas_principal.create_image(600, 300, anchor=tk.W, image=imagen).grid(
+            row=3, column=2
+        )
+    elif opcion == 12:
+        archivo = "media/" + numero_archivo_temp
+        imagen = tk.PhotoImage(file=archivo)
+        canvas_principal.create_image(600, 300, anchor=tk.W, image=imagen).grid(
+            row=3, column=2
+        )
     else:
-        print("Opción desconocida. \U0001F937")
-        break
-    
+        resultado = "Opción desconocida."
+        texto.destroy()
+        texto = tk.Label(canvas_principal, text=resultado)
+        canvas_principal.create_window(400, 200, window=texto.grid(row=3, column=2))
+
+
+canvas_principal.create_window(
+    400,
+    200,
+    window=tk.Button(
+        canvas_principal,
+        text="Consultar",
+        command=lambda: [obtenerDatos(), mostrarDatos()],
+    ).grid(row=20, column=1),
+)
+
+filas = 3
+
+for opcion, val in opciones:
+    filas += 1
+    boton = tk.Radiobutton(
+        canvas_principal, text=opcion, variable=seleccion, value=val
+    ).grid(row=filas, column=0)
+    canvas_principal.create_window(400, 200, window=boton)
+
+canvas_principal.create_window(
+    400, 200, window=tk.Label(canvas_principal, text=opcion).grid(row=19, column=0)
+)
+canvas_principal.create_window(
+    400,
+    200,
+    window=tk.Button(canvas_principal, text="Salir", command=raiz.destroy).grid(
+        row=21, column=1
+    ),
+)
+
+raiz.mainloop()
